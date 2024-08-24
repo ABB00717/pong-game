@@ -22,7 +22,11 @@ public:
     DrawCircle(position[0], position[1], radius, WHITE);
   }
 
-private:
+  std::vector<double> getPosition() {
+    return position;
+  }
+
+protected:
   std::vector<double> position;
   std::vector<double> speed;
   double radius;
@@ -38,21 +42,32 @@ public:
     this->height = height;
   }
 
-  void Draw() {
+  virtual void Draw() {
     DrawRectangle(position[0], position[1], width, height, WHITE);
   }
 
-  void Update() {
+  virtual void Update() {
     if (IsKeyDown(KEY_E) && position[1] >= 15) position[1] -= speed;
     if (IsKeyDown(KEY_D) && position[1]+height <= GetScreenHeight()-15) position[1] += speed;
   }
 
-private:
-  std::vector<double>  position;
+protected:
+  std::vector<double> position;
   double speed;
   double width;
   double height;
 
+};
+
+class CpuPaddle: public Paddle {
+public:
+  CpuPaddle(std::vector<double> position, double speed, double width, double height)
+    : Paddle(position, speed, width, height) {}
+
+  void Update(std::vector<double> ballPosition) {
+    if (ballPosition[1] > position[1]+height/2 && position[1]+height < GetScreenHeight()-15) position[1] += speed;
+    if (ballPosition[1] < position[1]+height/2 && position[1] > 15) position[1] -= speed;
+  }
 };
 
 int main() {
@@ -67,19 +82,21 @@ int main() {
   
   Ball ball({(double)screenWidth/2, (double)screenHeight/2}, {3, 3}, 20);
   Paddle player({10, (double)screenHeight/2-60}, 4, 25, 120);
+  CpuPaddle computer({(double)screenWidth-35, (double)screenHeight/2-60}, 4, 25, 120);
 
   while (WindowShouldClose() == false) {
     BeginDrawing();
     ball.Update();
     player.Update();
+    computer.Update(ball.getPosition());
 
     ClearBackground(BLACK);
 
     ball.Draw();
     player.Draw();
-    DrawRectangle(screenWidth-35, screenHeight/2-60, 25, 120, WHITE);
-    DrawLine(screenWidth/2, 0, screenWidth/2, screenHeight, WHITE);
+    computer.Draw();
     
+    DrawLine(screenWidth/2, 0, screenWidth/2, screenHeight, WHITE);
     EndDrawing();
   }
 

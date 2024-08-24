@@ -118,6 +118,8 @@ int main() {
     computer.draw();
     
     DrawLine(screenWidth/2, 0, screenWidth/2, screenHeight, WHITE);
+    DrawText(TextFormat("%i", playerScore), screenWidth*3/4-20, 20, 80, WHITE);
+    DrawText(TextFormat("%i", computerScore), screenWidth/4-20, 20, 80, WHITE);
     EndDrawing();
   }
 

@@ -1,100 +1,121 @@
 #include <iostream>
 #include <raylib.h>
-#include <vector>
+
+const int screenWidth = 1280;
+const int screenHeight = 800;
+const char* title = "Pong!";
+const int targetFPS = 144;
+int playerScore = 0;
+int computerScore = 0;
 
 class Ball {
 public:
-  Ball(std::vector<double> position, std::vector<double> speed, double radius) {
+  Ball(Vector2 position, Vector2 speed, float radius) {
     this->position = position;
     this->speed = speed;
     this->radius = radius;
   }
 
-  void Update() {
-    position[0] += speed[0];
-    position[1] += speed[1];
+  void update() {
+    position.x += speed.x;
+    position.y += speed.y;
 
-    if (position[1]-radius <= 0 || position[1]+radius >= GetScreenHeight()) speed[1] *= -1;
-    if (position[0]-radius <= 0 || position[0]+radius >= GetScreenWidth()) speed[0] *= -1;
+    if (position.y-radius <= 0 || position.y+radius >= GetScreenHeight()) speed.y *= -1;
+    if (position.x-radius <= 0 || position.x+radius >= GetScreenWidth()) speed.x *= -1;
+
+    if (position.x-radius <= 0) {
+      computerScore++;
+      position = {(float)screenWidth/2, (float)screenHeight/2};
+    } else if (position.x+radius >= GetScreenWidth()) {
+      playerScore++;
+      position = {(float)screenWidth/2, (float)screenHeight/2};
+    }
   }
 
-  void Draw() {
-    DrawCircle(position[0], position[1], radius, WHITE);
+  void draw() { 
+    DrawCircle(position.x, position.y, radius, WHITE); 
+  }
+  
+  void paddleCollision() {
+    speed.x *= -1;
   }
 
-  std::vector<double> getPosition() {
-    return position;
-  }
+  Vector2 getPosition() { return position; }
+  float getRadius() { return radius; }
 
 protected:
-  std::vector<double> position;
-  std::vector<double> speed;
-  double radius;
+  Vector2 position;
+  Vector2 speed;
+  float radius;
   
 };
 
 class Paddle {
 public:
-  Paddle(std::vector<double> position, double speed, double width, double height) {
+  Paddle(Vector2 position, float speed, float width, float height) {
     this->position = position;
     this->speed = speed;
     this->width = width;
     this->height = height;
   }
 
-  virtual void Draw() {
-    DrawRectangle(position[0], position[1], width, height, WHITE);
+  virtual void draw() {
+    DrawRectangle(position.x, position.y, width, height, WHITE);
   }
 
-  virtual void Update() {
-    if (IsKeyDown(KEY_E) && position[1] >= 15) position[1] -= speed;
-    if (IsKeyDown(KEY_D) && position[1]+height <= GetScreenHeight()-15) position[1] += speed;
+  virtual void update() {
+    if (IsKeyDown(KEY_E) && position.y >= 20) position.y -= speed;
+    if (IsKeyDown(KEY_D) && position.y+height <= GetScreenHeight()-20) position.y += speed;
+  }
+
+  Rectangle getPaddle() {
+    Rectangle paddle = {position.x, position.y, width, height};
+
+    return paddle;
   }
 
 protected:
-  std::vector<double> position;
-  double speed;
-  double width;
-  double height;
+  Vector2 position;
+  float speed;
+  float width;
+  float height;
 
 };
 
 class CpuPaddle: public Paddle {
 public:
-  CpuPaddle(std::vector<double> position, double speed, double width, double height)
+  CpuPaddle(Vector2 position, float speed, float width, float height)
     : Paddle(position, speed, width, height) {}
 
-  void Update(std::vector<double> ballPosition) {
-    if (ballPosition[1] > position[1]+height/2 && position[1]+height < GetScreenHeight()-15) position[1] += speed;
-    if (ballPosition[1] < position[1]+height/2 && position[1] > 15) position[1] -= speed;
+  void update(Vector2 ballPosition) {
+    if (ballPosition.y > position.y+height/2 && position.y+height < GetScreenHeight()-15) position.y += speed;
+    if (ballPosition.y < position.y+height/2 && position.y > 15) position.y -= speed;
   }
 };
 
 int main() {
   std::cout << "Hello, World!" << std::endl;
 
-  const int screenWidth = 1280;
-  const int screenHeight = 800;
-  const char* title = "Pong!";
-  const int targetFPS = 144;
   InitWindow(screenWidth, screenHeight, title);
   SetTargetFPS(targetFPS);
   
-  Ball ball({(double)screenWidth/2, (double)screenHeight/2}, {3, 3}, 20);
-  Paddle player({10, (double)screenHeight/2-60}, 4, 25, 120);
-  CpuPaddle computer({(double)screenWidth-35, (double)screenHeight/2-60}, 4, 25, 120);
+  Ball ball({(float)screenWidth/2, (float)screenHeight/2}, {3, 3}, 20);
+  Paddle player({20, (float)screenHeight/2-60}, 4, 25, 120);
+  CpuPaddle computer({(float)screenWidth-45, (float)screenHeight/2-60}, 4, 25, 120);
 
   while (WindowShouldClose() == false) {
     BeginDrawing();
-    ball.Update();
-    player.Update();
-    computer.Update(ball.getPosition());
+    ball.update();
+    player.update();
+    computer.update(ball.getPosition());
+
+    if (CheckCollisionCircleRec(ball.getPosition(),ball.getRadius(),player.getPaddle())) ball.paddleCollision();
+    if (CheckCollisionCircleRec(ball.getPosition(),ball.getRadius(),computer.getPaddle())) ball.paddleCollision();
 
     ClearBackground(BLACK);
-
-    ball.Draw();
-    player.Draw();
-    computer.Draw();
+    ball.draw();
+    player.draw();
+    computer.draw();
     
     DrawLine(screenWidth/2, 0, screenWidth/2, screenHeight, WHITE);
     EndDrawing();

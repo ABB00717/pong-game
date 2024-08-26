@@ -8,6 +8,11 @@ const int targetFPS = 144;
 int playerScore = 0;
 int computerScore = 0;
 
+Color Green = Color {38, 185, 154, 255};
+Color DarkGreen = Color {20, 160, 133, 255};
+Color LightGreen = Color {129, 204, 154, 255};
+Color Yellow = Color {243, 213, 91, 255};
+
 class Ball {
 public:
   Ball(Vector2 position, Vector2 speed, float radius) {
@@ -33,7 +38,7 @@ public:
   }
 
   void draw() { 
-    DrawCircle(position.x, position.y, radius, WHITE); 
+    DrawCircle(position.x, position.y, radius, Yellow); 
   }
   
   void paddleCollision() {
@@ -112,12 +117,14 @@ int main() {
     if (CheckCollisionCircleRec(ball.getPosition(),ball.getRadius(),player.getPaddle())) ball.paddleCollision();
     if (CheckCollisionCircleRec(ball.getPosition(),ball.getRadius(),computer.getPaddle())) ball.paddleCollision();
 
-    ClearBackground(BLACK);
+    ClearBackground(DarkGreen);
+
+    DrawRectangle(screenWidth/2, 0, screenWidth/2, screenHeight, Green);
+    DrawCircle(screenWidth/2, screenHeight/2, 150, LightGreen);
+    DrawLine(screenWidth/2, 0, screenWidth/2, screenHeight, WHITE);
     ball.draw();
     player.draw();
     computer.draw();
-    
-    DrawLine(screenWidth/2, 0, screenWidth/2, screenHeight, WHITE);
     DrawText(TextFormat("%i", playerScore), screenWidth*3/4-20, 20, 80, WHITE);
     DrawText(TextFormat("%i", computerScore), screenWidth/4-20, 20, 80, WHITE);
     EndDrawing();
